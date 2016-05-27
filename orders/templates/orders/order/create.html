@@ -1,0 +1,46 @@
+{% extends "shop/base.html" %}
+{% load i18n %}
+
+{% block title %}
+    {% trans "Checkout" %}
+{% endblock %}
+
+{% block content %}
+    
+    <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--3-offset mdl-cell--4-col">
+            <h3>{% trans "Checkout" %}</h3>
+            <form action="." method="post" class="order-form mdl-color--white mdl-shadow--2dp">
+                {{ form.as_p }}
+                <input class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored subm" type="submit" value="{% trans "Place order" %}">
+                {% csrf_token %}
+            </form>
+        </div>
+
+        <div class="mdl-cell mdl-cell--4-col">
+            <h3>{% trans "Your order" %}</h3>
+            <table class="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp table-order">
+                {% for item in cart %}
+                <tr>
+                    <td class="mdl-data-table__cell--non-numeric">{{ item.quantity }}x {{ item.product.name }} </td>
+                    <td><span>{{ item.total_price }}{% trans "UAH" %}</span></td>
+                </tr>
+                {% endfor %}
+                
+                {% if cart.coupon %}
+                <tr>
+                    <td class="mdl-data-table__cell--non-numeric">{% blocktrans with code=cart.coupon.code discount=cart.coupon.discount %}
+                            {{ discount }}% off
+                        {% endblocktrans %}
+                    </td>
+                    <td><span>-{{ cart.get_discount|floatformat:"2" }}{% trans "UAH" %}</span></td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td class="mdl-typography--text-center" colspan="2">{% trans "Total" %}: {{ cart.get_total_price_after_discount|floatformat:"2" }}{% trans "UAH" %}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}

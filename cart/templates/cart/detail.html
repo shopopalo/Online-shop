@@ -1,0 +1,102 @@
+{% extends "shop/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}
+    {% trans "Your shopping cart" %}
+{% endblock %}
+
+{% block content %}
+<!-- таблица с товарами -->
+    <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--3-offset mdl-cell--6-col">
+            <h1 class="mdl-typography--text-center">{% trans "Your shopping cart" %}</h1>
+            <div class="mdl-color--white mdl-shadow--2dp">
+                <table class="cart table">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Image" %}</th>
+                            <th>{% trans "Product" %}</th>
+                            <th>{% trans "Quantity" %}</th>
+                            <th>{% trans "Remove" %}</th>
+                            <th>{% trans "Unit price" %}</th>                
+                            <th>{% trans "Price" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in cart %}
+                        {% with product=item.product %}
+                        <tr>
+                            <td>
+                                <a href="{{ product.get_absolute_url }}">
+                                    <img style="width: 100px;" src="{% if product.image %}{{ product.image.url }}{% else %}{% static "img/no_image.png" %}{% endif %}">
+                                </a>
+                            </td>
+                            <td>{{ product.name }}</td>
+                            <td>
+                                <form action="{% url "cart:cart_add" product.id %}" method="post">
+                                    {{ item.update_quantity_form.quantity }}
+                                    {{ item.update_quantity_form.update }}
+                                    <input type="submit" value="{% trans "Update" %}">
+                                    {% csrf_token %}
+                                </form>
+                            </td>
+                            <td><a href="{% url "cart:cart_remove" product.id %}">{% trans "Remove" %}</a></td>
+                            <td class="num">{{ item.price }}{% trans "UAH" %}</td>
+                            <td class="num">{{ item.total_price }}{% trans "UAH" %}</td>
+                        </tr>
+                        {% endwith %}
+                    {% endfor %}
+                    
+                    {% if cart.coupon %}
+                        <tr class="subtotal">
+                            <td>{% trans "Subtotal" %}</td>
+                            <td colspan="4"></td>
+                            <td class="num">{{ cart.get_total_price }}{% trans "UAH" %}</td>
+                        </tr>
+                        <tr>
+                            {% blocktrans with code=cart.coupon.code discount=cart.coupon.discount %}
+                                <td>-{{ discount }}%</td>
+                            {% endblocktrans %}
+                            <td colspan="4"></td>
+                            <td class="num neg">-{{ cart.get_discount|floatformat:"2" }}{% trans "UAH" %}</td>
+                        </tr>
+                    {% endif %}
+                    <tr class="total">
+                        <td>{% trans "Total" %}</td>
+                        <td colspan="4"></td>
+                        <td class="num">{{ cart.get_total_price_after_discount|floatformat:"2" }}{% trans "UAH" %}</td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<!-- END таблица с товарами -->
+
+
+
+<!-- форма купона и кнопки подтверждения заказа -->
+    <div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--3-offset mdl-cell--3-col mdl-color--white mdl-shadow--2dp coupon-form">
+        <p>
+            {% trans "Apply a coupon" %}:
+        </p>
+        <form action="{% url "coupons:apply" %}" method="post">
+            {{ coupon_apply_form }}
+            <input type="submit" value="{% trans "Apply" %}">
+            {% csrf_token %}
+        </form>
+        </div>
+        <div class="mdl-cell mdl-cell--3-col">
+        <p class="mdl-typography--text-center">
+            <a href="{% url "shop:product_list" %}" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent continue-btn">{% trans "Continue shopping" %}</a>
+            <a href="{% url "orders:order_create" %}" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored continue-btn">{% trans "Checkout" %}</a>
+        </p>
+
+    </div>
+    </div>
+<!--END форма купона и кнопки подтверждения заказа-->
+    
+{% endblock %}
